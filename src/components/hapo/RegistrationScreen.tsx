@@ -1,9 +1,12 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { HapoLogo } from "@/components/hapo/HapoLogo";
+import { Button } from "@/components/ui/button";
+import { Settings } from "lucide-react";
 
 const generateCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -27,9 +30,10 @@ const pollForRegistration = async (code: string): Promise<boolean> => {
 
 type RegistrationScreenProps = {
   onRegistered: () => void;
+  onOpenMenu: () => void;
 };
 
-export default function RegistrationScreen({ onRegistered }: RegistrationScreenProps) {
+export default function RegistrationScreen({ onRegistered, onOpenMenu }: RegistrationScreenProps) {
   const [code, setCode] = useState<string>("");
   const [isPolling, setIsPolling] = useState(false);
   const [progress, setProgress] = useState(0);
@@ -67,7 +71,13 @@ export default function RegistrationScreen({ onRegistered }: RegistrationScreenP
   }, [isPolling]);
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+    <main className="relative flex min-h-screen flex-col items-center justify-center p-8 bg-background">
+       <div className="absolute top-4 right-4">
+        <Button variant="ghost" size="icon" onClick={onOpenMenu}>
+          <Settings className="h-6 w-6" />
+          <span className="sr-only">Open Settings</span>
+        </Button>
+      </div>
       <Card className="w-full max-w-2xl text-center shadow-2xl bg-card border-2">
         <CardHeader>
           <div className="mx-auto mb-6">

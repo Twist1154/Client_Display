@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from "next/image";
@@ -7,7 +8,8 @@ import Autoplay from "embla-carousel-autoplay";
 
 import { StatusIndicator, type Status } from "@/components/hapo/StatusIndicator";
 import { HapoLogo } from "./HapoLogo";
-import { Wifi, WifiOff, Monitor } from "lucide-react";
+import { Wifi, WifiOff, Monitor, Settings } from "lucide-react";
+import { Button } from "../ui/button";
 
 type Message = {
   type: 'content' | 'status' | 'emergency';
@@ -23,9 +25,10 @@ type ContentItem = {
 
 type ContentScreenProps = {
   messages: Message[];
+  onOpenMenu: () => void;
 };
 
-export default function ContentScreen({ messages }: ContentScreenProps) {
+export default function ContentScreen({ messages, onOpenMenu }: ContentScreenProps) {
   const [playlist, setPlaylist] = useState<ContentItem[]>([]);
   const [status, setStatus] = useState<Status>('online');
   const [api, setApi] = useState<CarouselApi>();
@@ -122,15 +125,20 @@ export default function ContentScreen({ messages }: ContentScreenProps) {
                 <p className="text-xl font-bold font-headline">Hapo Display</p>
             </div>
             <div className="flex items-center gap-6">
-                <StatusIndicator status={status} />
-                <div className="flex items-center gap-2">
-                    {status !== 'offline' ? <Wifi size={20} /> : <WifiOff size={20} />}
-                    <span className="text-sm font-medium">{status === 'offline' ? 'Offline' : 'Connected'}</span>
-                </div>
+                <button onClick={onOpenMenu} className="flex items-center gap-2 cursor-pointer p-2 rounded-md hover:bg-white/10 transition-colors">
+                  <StatusIndicator status={status} />
+                  <div className="flex items-center gap-2">
+                      {status !== 'offline' ? <Wifi size={20} /> : <WifiOff size={20} />}
+                      <span className="text-sm font-medium">{status === 'offline' ? 'Offline' : 'Connected'}</span>
+                  </div>
+                </button>
                 <div className="flex items-center gap-2">
                     <Monitor size={20} /> 
                     <span className="text-sm font-medium">Screen ID: D-102A</span>
                 </div>
+                <Button variant="ghost" size="icon" onClick={onOpenMenu} className="text-white hover:bg-white/10 hover:text-white">
+                  <Settings />
+                </Button>
             </div>
         </div>
       </footer>

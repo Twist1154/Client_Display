@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,6 +8,7 @@ import EmergencyOverlay from "@/components/hapo/EmergencyOverlay";
 import { useHapoSocket } from "@/hooks/use-hapo-socket";
 import { HapoLogo } from "@/components/hapo/HapoLogo";
 import { Loader2 } from "lucide-react";
+import SideMenu from "@/components/hapo/SideMenu";
 
 const checkIsRegistered = async (): Promise<boolean> => {
   if (typeof window === "undefined") return false;
@@ -17,6 +19,7 @@ export default function Home() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [emergency, setEmergency] = useState<string | null>(null);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   const { messages } = useHapoSocket({ isRegistered });
 
@@ -38,6 +41,12 @@ export default function Home() {
     localStorage.setItem("hapo-token", "true");
     setIsRegistered(true);
   };
+  
+  const handleReregister = () => {
+    localStorage.removeItem("hapo-token");
+    setIsRegistered(false);
+    setIsMenuOpen(false);
+  };
 
   const handleClearEmergency = () => {
     setEmergency(null);
@@ -57,10 +66,17 @@ export default function Home() {
 
   return (
     <>
+       <SideMenu 
+        isOpen={isMenuOpen} 
+        onOpenChange={setIsMenuOpen} 
+        isRegistered={isRegistered}
+        messages={messages}
+        onReregister={handleReregister}
+      />
       {isRegistered ? (
-        <ContentScreen messages={messages} />
+        <ContentScreen messages={messages} onOpenMenu={() => setIsMenuOpen(true)} />
       ) : (
-        <RegistrationScreen onRegistered={handleRegistrationSuccess} />
+        <RegistrationScreen onRegistered={handleRegistrationSuccess} onOpenMenu={() => setIsMenuOpen(true)} />
       )}
       {emergency && (
         <EmergencyOverlay
