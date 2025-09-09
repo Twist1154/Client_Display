@@ -88,8 +88,6 @@ export default function ContentScreen({ messages }: ContentScreenProps) {
                     className="object-cover"
                     priority={index === 0}
                     data-ai-hint={item['data-ai-hint']}
-                    width={1920}
-                    height={1080}
                   />
                 )}
                 {item.type === "video" && item.url && (
