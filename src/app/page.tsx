@@ -51,7 +51,9 @@ export default function Home() {
   
   const handleReregister = () => {
     localStorage.removeItem("hapo-token");
+    localStorage.removeItem("hapo-ws-url");
     setIsRegistered(false);
+    setSocketUrl(null);
     setIsMenuOpen(false);
   };
 
