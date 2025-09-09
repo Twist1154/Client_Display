@@ -15,20 +15,27 @@ const checkIsRegistered = async (): Promise<boolean> => {
   return Promise.resolve(localStorage.getItem("hapo-token") === "true");
 };
 
+const getSocketUrl = (): string | null => {
+    if (typeof window === 'undefined') return null;
+    return localStorage.getItem("hapo-ws-url") || process.env.NEXT_PUBLIC_WEBSOCKET_URL || null;
+}
+
 export default function Home() {
   const [isRegistered, setIsRegistered] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [emergency, setEmergency] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-  const { messages } = useRealHapoSocket({ isRegistered });
+  const [socketUrl, setSocketUrl] = useState<string | null>(null);
 
   useEffect(() => {
     checkIsRegistered().then((registered) => {
       setIsRegistered(registered);
+      setSocketUrl(getSocketUrl());
       setIsLoading(false);
     });
   }, []);
+
+  const { messages } = useRealHapoSocket({ isRegistered, socketUrl });
 
   useEffect(() => {
     const emergencyMessage = messages.find((msg) => msg.type === "emergency");
@@ -52,6 +59,12 @@ export default function Home() {
     setEmergency(null);
   };
 
+  const handleUrlSave = (newUrl: string) => {
+    localStorage.setItem("hapo-ws-url", newUrl);
+    setSocketUrl(newUrl);
+    setIsMenuOpen(false);
+  };
+
   if (isLoading) {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center bg-background gap-4">
@@ -72,6 +85,8 @@ export default function Home() {
         isRegistered={isRegistered}
         messages={messages}
         onReregister={handleReregister}
+        socketUrl={socketUrl}
+        onUrlSave={handleUrlSave}
       />
       {isRegistered ? (
         <ContentScreen messages={messages} onOpenMenu={() => setIsMenuOpen(true)} />

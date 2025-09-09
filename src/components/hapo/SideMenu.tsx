@@ -1,12 +1,15 @@
 
 "use client";
 
+import { useState, useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetFooter } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Status, StatusIndicator } from "./StatusIndicator";
 import { HapoLogo } from "./HapoLogo";
-import { Wifi, Monitor, Power, AlertTriangle, ListVideo, Clock } from "lucide-react";
+import { Wifi, Monitor, Power, AlertTriangle, ListVideo, Clock, Server } from "lucide-react";
 
 type Message = {
   type: 'content' | 'status' | 'emergency';
@@ -26,9 +29,21 @@ type SideMenuProps = {
   isRegistered: boolean;
   messages: Message[];
   onReregister: () => void;
+  socketUrl: string | null;
+  onUrlSave: (url: string) => void;
 };
 
-export default function SideMenu({ isOpen, onOpenChange, isRegistered, messages, onReregister }: SideMenuProps) {
+export default function SideMenu({ isOpen, onOpenChange, isRegistered, messages, onReregister, socketUrl, onUrlSave }: SideMenuProps) {
+
+  const [url, setUrl] = useState(socketUrl || "");
+
+  useEffect(() => {
+    setUrl(socketUrl || "");
+  }, [socketUrl, isOpen]);
+
+  const handleSave = () => {
+    onUrlSave(url);
+  };
 
   const statusMessage = messages.slice().reverse().find(m => m.type === 'status');
   const status: Status = statusMessage?.payload?.status as Status || 'offline';
@@ -42,7 +57,7 @@ export default function SideMenu({ isOpen, onOpenChange, isRegistered, messages,
         {icon}
         <span className="font-medium">{label}</span>
       </div>
-      <span className="font-mono text-sm text-foreground">{value}</span>
+      <span className="font-mono text-sm text-foreground break-all text-right">{value}</span>
     </div>
   );
 
@@ -60,11 +75,26 @@ export default function SideMenu({ isOpen, onOpenChange, isRegistered, messages,
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto space-y-6 py-6">
+            {!isRegistered && (
+                 <div className="space-y-4 px-6">
+                    <h3 className="font-semibold text-lg flex items-center gap-2"><Server size={20} /> Server Configuration</h3>
+                    <div className="space-y-3 rounded-lg border p-4">
+                        <Label htmlFor="ws-url">WebSocket URL</Label>
+                        <Input id="ws-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="wss://your-server.com" />
+                        <Button onClick={handleSave} className="w-full">Save URL</Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground px-1">
+                        Configure the server address for this display to connect to. This is required for registration.
+                    </p>
+                </div>
+            )}
+            
             <div className="space-y-4 px-6">
                  <h3 className="font-semibold text-lg">System Information</h3>
                 <div className="space-y-3 rounded-lg border p-4">
                     <InfoRow icon={<Monitor size={18} />} label="Screen ID" value="D-102A" />
                     <InfoRow icon={<Wifi size={18} />} label="Connection" value={<StatusIndicator status={status} />} />
+                    {isRegistered && socketUrl && <InfoRow icon={<Server size={18} />} label="Server URL" value={socketUrl} />}
                     {isRegistered && <InfoRow icon={<Clock size={18} />} label="Uptime" value="4h 12m" />}
                 </div>
             </div>

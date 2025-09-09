@@ -11,21 +11,15 @@ type Message = {
 
 type UseHapoSocketProps = {
   isRegistered: boolean;
+  socketUrl?: string | null;
 };
 
-export function useRealHapoSocket({ isRegistered }: UseHapoSocketProps) {
+export function useRealHapoSocket({ isRegistered, socketUrl }: UseHapoSocketProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
-    if (isRegistered) {
-      const socketUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL;
-
-      if (!socketUrl) {
-        console.error("WebSocket URL is not defined. Please set NEXT_PUBLIC_WEBSOCKET_URL in your environment.");
-        return;
-      }
-
+    if (isRegistered && socketUrl) {
       console.log('Socket: Connecting to', socketUrl);
       ws.current = new WebSocket(socketUrl);
 
@@ -73,8 +67,11 @@ export function useRealHapoSocket({ isRegistered }: UseHapoSocketProps) {
         if (ws.current) {
             ws.current.close();
         }
+        if (isRegistered && !socketUrl) {
+             console.error("WebSocket URL is not defined. Please set it in the side menu.");
+        }
     }
-  }, [isRegistered]);
+  }, [isRegistered, socketUrl]);
 
   return { messages };
 }
