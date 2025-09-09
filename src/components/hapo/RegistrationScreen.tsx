@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Progress } from "@/components/ui/progress";
 import { HapoLogo } from "@/components/hapo/HapoLogo";
 import { Button } from "@/components/ui/button";
-import { Settings } from "lucide-react";
+import { Settings, RefreshCw } from "lucide-react";
 
 const generateCode = () => {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
@@ -19,12 +19,12 @@ const generateCode = () => {
 
 const pollForRegistration = async (code: string): Promise<boolean> => {
   console.log(`Polling for registration with code: ${code}`);
+  // In a real application, this would make a network request to a server.
+  // For this demo, we are simulating a successful registration.
+  // We don't resolve this promise automatically anymore to let it time out.
   return new Promise(resolve => {
-    setTimeout(() => {
-        // Forcing success for demo purposes after 5 seconds
-        console.log("Registration successful!");
-        resolve(true);
-    }, 5000);
+    // The real socket connection will handle registration.
+    // We'll leave this to time out.
   });
 };
 
@@ -37,28 +37,52 @@ export default function RegistrationScreen({ onRegistered, onOpenMenu }: Registr
   const [code, setCode] = useState<string>("");
   const [isPolling, setIsPolling] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [timedOut, setTimedOut] = useState(false);
 
   useEffect(() => {
-    setCode(generateCode());
-    setIsPolling(true);
+    startRegistrationProcess();
   }, []);
+  
+  const startRegistrationProcess = () => {
+    setTimedOut(false);
+    setProgress(0);
+    const newCode = generateCode();
+    setCode(newCode);
+    setIsPolling(true);
+  };
 
   useEffect(() => {
     let pollInterval: NodeJS.Timeout | undefined;
+    let timeoutId: NodeJS.Timeout | undefined;
+
     if (isPolling && code) {
       const checkRegistration = async () => {
-        const isRegistered = await pollForRegistration(code);
-        if (isRegistered) {
-          setIsPolling(false);
-          if(pollInterval) clearInterval(pollInterval);
-          onRegistered();
+        try {
+            const isRegistered = await pollForRegistration(code);
+            if (isRegistered) {
+                setIsPolling(false);
+                if(pollInterval) clearInterval(pollInterval);
+                if(timeoutId) clearTimeout(timeoutId);
+                onRegistered();
+            }
+        } catch(e) {
+            console.log("Polling timed out, which is expected in this demo.");
         }
       }
       checkRegistration(); // check once immediately
-      pollInterval = setInterval(checkRegistration, 10000);
+      pollInterval = setInterval(checkRegistration, 10000); // Poll every 10 seconds
+
+      // Set a timeout for 5 minutes (300,000 milliseconds)
+      timeoutId = setTimeout(() => {
+        setIsPolling(false);
+        setTimedOut(true);
+        if(pollInterval) clearInterval(pollInterval);
+      }, 300000);
     }
+    
     return () => {
-      if(pollInterval) clearInterval(pollInterval)
+      if(pollInterval) clearInterval(pollInterval);
+      if(timeoutId) clearTimeout(timeoutId);
     };
   }, [isPolling, code, onRegistered]);
 
@@ -85,22 +109,34 @@ export default function RegistrationScreen({ onRegistered, onOpenMenu }: Registr
           </div>
           <CardTitle className="text-4xl font-bold font-headline">Register This Screen</CardTitle>
           <CardDescription className="text-xl pt-2 text-muted-foreground">
-            Use the code below in your admin panel to pair this screen.
+             {timedOut ? "Registration timed out." : "Use the code below in your admin panel to pair this screen."}
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-8">
-          <div className="p-6 bg-muted rounded-lg w-full">
-            <p
-              className="text-5xl font-bold text-primary font-code tracking-widest"
-              aria-label={`Registration code: ${code.split('').join(' ')}`}
-            >
-              {code || "Generating..."}
-            </p>
-          </div>
-          <div className="w-full space-y-2">
-            <p className="text-muted-foreground">Waiting for connection...</p>
-            <Progress value={progress} className="w-full h-2" />
-          </div>
+            {timedOut ? (
+                <div className="flex flex-col items-center gap-4 p-6">
+                    <p className="text-lg text-destructive">The registration code has expired.</p>
+                    <Button onClick={startRegistrationProcess}>
+                        <RefreshCw className="mr-2" />
+                        Generate New Code
+                    </Button>
+                </div>
+            ) : (
+                <>
+                    <div className="p-6 bg-muted rounded-lg w-full">
+                        <p
+                        className="text-5xl font-bold text-primary font-code tracking-widest"
+                        aria-label={`Registration code: ${code.split('').join(' ')}`}
+                        >
+                        {code || "Generating..."}
+                        </p>
+                    </div>
+                    <div className="w-full space-y-2">
+                        <p className="text-muted-foreground">Waiting for connection...</p>
+                        <Progress value={progress} className="w-full h-2" />
+                    </div>
+                </>
+            )}
         </CardContent>
       </Card>
     </main>
