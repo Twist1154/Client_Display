@@ -5,7 +5,7 @@ import { useState, useEffect } from "react";
 import RegistrationScreen from "@/components/hapo/RegistrationScreen";
 import ContentScreen from "@/components/hapo/ContentScreen";
 import EmergencyOverlay from "@/components/hapo/EmergencyOverlay";
-import { useHapoSocket } from "@/hooks/use-hapo-socket";
+import { useRealHapoSocket } from "@/hooks/use-real-hapo-socket";
 import { HapoLogo } from "@/components/hapo/HapoLogo";
 import { Loader2 } from "lucide-react";
 import SideMenu from "@/components/hapo/SideMenu";
@@ -21,7 +21,7 @@ export default function Home() {
   const [emergency, setEmergency] = useState<string | null>(null);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
-  const { messages } = useHapoSocket({ isRegistered });
+  const { messages } = useRealHapoSocket({ isRegistered });
 
   useEffect(() => {
     checkIsRegistered().then((registered) => {
